@@ -16,11 +16,40 @@
 #include "../lib/libnet/libnet-macros.h"
 #include "../lib/libnet/libnet-types.h"
 #include "../lib/libnet/libnet-headers.h"
-#include "../header/arp.h"
-#include "../header/mac.h"
+#include "./model/arp.h"
+#include "./model/mac.h"
 
 using namespace std;
 
+/**
+ * @brief getIpAddress
+ * @details Get My Network Interface's IP
+ * @param interface
+ * @return
+ */
+char* getIpAddress(char *interface)
+{
+    struct ifaddrs *ifap, *ifa;
+    struct sockaddr_in *sa;
+
+    getifaddrs (&ifap);
+    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+
+        if (strcmp(ifa->ifa_name, interface) == 0)
+        {
+           if (ifa->ifa_addr->sa_family==AF_INET) {
+                sa = (struct sockaddr_in *) ifa->ifa_addr;
+                inet_ntoa(sa->sin_addr);
+                //printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, addr);
+                freeifaddrs(ifap);
+                return inet_ntoa(sa->sin_addr);
+           }
+        }
+    }
+
+    freeifaddrs(ifap);
+
+}
 int main(int argc, char **argv)
 {
     //Parameter Count Check
@@ -34,8 +63,10 @@ int main(int argc, char **argv)
     char *sender_ip[] = {};
     char *target_ip[] = {};
     char errbuf[PCAP_ERRBUF_SIZE];
-    Mac mac;
-    cout<<mac.getMacAddress()<<endl;
+    char *my_ip = getIpAddress(interface);
+    Mac mac(interface);
+    //mac.getMacAddress();
+
 
     //Push IP Info
     for(int i=2;i<argc;i++)
@@ -62,8 +93,6 @@ int main(int argc, char **argv)
     }
     */
 
-
-    cout << argc <<endl;
 
     return 0;
 }
